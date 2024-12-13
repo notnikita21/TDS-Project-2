@@ -10,70 +10,57 @@ AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
 if not AIPROXY_TOKEN:
     raise ValueError("AIPROXY_TOKEN is not set. Please set it as an environment variable.")
 
-# Assuming CSV file is in the repository, or provided via a path argument
-dataset_path = 'goodreads.csv'  # Replace with the actual file path or input path
+# Get dataset path dynamically
+dataset_path = input("Enter the CSV file path: ").strip()
+output_folder = os.path.splitext(os.path.basename(dataset_path))[0]
+os.makedirs(output_folder, exist_ok=True)
 
 # Read the CSV file with encoding handling
 try:
-    data = pd.read_csv(dataset_path, encoding='latin-1')  # Adjust encoding if needed
+    data = pd.read_csv(dataset_path, encoding='latin-1')
     print("Columns in the dataset and their data types:")
     print(data.dtypes)
-
-    # Show the first 5 rows of the first 20 columns
     print(data.iloc[:, :20].head())
-
 except FileNotFoundError:
-    print(f"Error: File '{dataset_path}' not found.")
+    raise FileNotFoundError(f"Error: File '{dataset_path}' not found.")
 except pd.errors.EmptyDataError:
-    print("Error: The CSV file is empty.")
+    raise ValueError("Error: The CSV file is empty.")
 except UnicodeDecodeError as e:
-    print(f"Encoding error: {e}. Try changing the file encoding.")
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+    raise ValueError(f"Encoding error: {e}. Try changing the file encoding.")
 
-# Proceed only if data was read successfully
-if 'data' in locals():
-    # Summarize the data
-    summary = data.describe(include='all')
-    missing_values = data.isnull().sum()
+# Summarize the data
+summary = data.describe(include='all')
+missing_values = data.isnull().sum()
 
-    # Extract only numerical columns for correlation matrix
-    numerical_columns = data.select_dtypes(include=['float64', 'int64']).columns
+# Extract numerical columns
+numerical_columns = data.select_dtypes(include=['float64', 'int64']).columns
+if len(numerical_columns) > 0:
+    correlation_matrix = data[numerical_columns].corr()
+else:
+    print("No numerical columns found for correlation matrix.")
 
-    if len(numerical_columns) > 0:
-        correlation_matrix = data[numerical_columns].corr()
-        print("Correlation Matrix:")
-        print(correlation_matrix)
-    else:
-        print("No numerical columns found for correlation matrix.")
+# Data type separation
+categorical_columns = data.select_dtypes(include=['object', 'category']).columns
+datetime_columns = data.select_dtypes(include=['datetime64']).columns
 
-    # Data type separation
-    categorical_columns = data.select_dtypes(include=['object', 'category']).columns
-    datetime_columns = data.select_dtypes(include=['datetime64']).columns
+# Visualizations
+if len(numerical_columns) > 0:
+    sns.pairplot(data[numerical_columns])
+    plt.savefig(f"{output_folder}/numerical_relationships.png")
+    plt.close()
 
-    print("Numerical columns:", numerical_columns)
-    print("Categorical columns:", categorical_columns)
-    print("Datetime columns:", datetime_columns)
+for col in categorical_columns:
+    data[col].value_counts().head(10).plot(kind='bar', title=f"Top Categories in {col}")
+    plt.savefig(f"{output_folder}/{col}_barplot.png")
+    plt.close()
 
-    # Visualizations
-    if len(numerical_columns) > 0:
-        sns.pairplot(data[numerical_columns])
-        plt.savefig("numerical_relationships.png")
-        plt.show()
-    else:
-        print("No numerical columns found.")
+for col in datetime_columns:
+    data[col] = pd.to_datetime(data[col], errors='coerce')
+    data[col].value_counts().sort_index().plot(title=f"Trends in {col}")
+    plt.savefig(f"{output_folder}/{col}_trend.png")
+    plt.close()
 
-    for col in categorical_columns:
-        data[col].value_counts().head(10).plot(kind='bar', title=f"Top Categories in {col}")
-        plt.savefig(f"{col}_barplot.png")
-        plt.show()
-
-    for col in datetime_columns:
-        data[col] = pd.to_datetime(data[col], errors='coerce')
-        data[col].value_counts().sort_index().plot(title=f"Trends in {col}")
-        plt.savefig(f"{col}_trend.png")
-        plt.show()
-
+# Function to query LLM
 def ask_llm(prompt):
     url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
     headers = {
@@ -94,18 +81,25 @@ def ask_llm(prompt):
     else:
         raise Exception(f"Request failed: {response.status_code}, {response.text}")
 
-# Example usage
+# Generate insights
 prompt = f"Summarize the following dataset insights:\n\n{summary.to_markdown()}"
 insights = ask_llm(prompt)
 print(insights)
 
-with open('README.md', 'w') as f:
+# Write README.md
+readme_path = os.path.join(output_folder, 'README.md')
+with open(readme_path, 'w') as f:
     f.write("# Automated Data Analysis\n\n")
     f.write("## Summary Statistics\n\n")
     f.write(summary.to_markdown())
     f.write("\n\n## Insights\n\n")
     f.write(insights)
     f.write("\n\n## Visualizations\n\n")
-    f.write("![Correlation Heatmap](heatmap.png)")
+    if len(numerical_columns) > 0:
+        f.write(f"![Numerical Relationships](numerical_relationships.png)\n")
+    for col in categorical_columns:
+        f.write(f"![{col} Bar Plot]({col}_barplot.png)\n")
+    for col in datetime_columns:
+        f.write(f"![{col} Trends]({col}_trend.png)\n")
 
-print("Analysis completed. Check the generated README.md.")
+print(f"Analysis completed. Check the generated folder '{output_folder}'.")
