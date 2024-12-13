@@ -42,3 +42,9 @@ jobs:
         path: |
           '*.png'  # Upload PNG files (charts)
           '*.md'   # Upload README files
+
+    - name: Debug File Listing
+      run: |
+        echo "Generated Files:"
+        find . -type f
+
