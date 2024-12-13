@@ -6,7 +6,9 @@ import os
 import requests
 
 # Use the AIPROXY_TOKEN from the environment
-os.environ["AIPROXY_TOKEN"] = "your_token_here"
+AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
+if not AIPROXY_TOKEN:
+    raise ValueError("AIPROXY_TOKEN is not set. Please set it as an environment variable.")
 
 # Assuming CSV file is in the repository, or provided via a path argument
 dataset_path = 'goodreads.csv'  # Replace with the actual file path or input path
