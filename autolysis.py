@@ -61,7 +61,7 @@ def process_csv_files():
         return
 
     for csv_file in csv_files:
-        output_folder = os.path.splitext(os.path.basename(csv_file))[0]
+        output_folder = os.path.join(os.getcwd(), os.path.splitext(os.path.basename(csv_file))[0])
         os.makedirs(output_folder, exist_ok=True)
 
         try:
