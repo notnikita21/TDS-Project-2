@@ -21,22 +21,24 @@ jobs:
       with:
         python-version: '3.8'
 
-    - name: Install openai
+    - name: Install dependencies
       run: |
         pip install openai  # Install the openai library directly
-
-    - name: Install other dependencies
-      run: |
         pip install -r requirements.txt  # This will install other dependencies if you still use them
 
-    - name: Run autolysis script
+    - name: Run autolysis script on all CSV files
       env:
         AIPROXY_TOKEN: ${{ secrets.AIPROXY_TOKEN }}  # Access secret token securely
       run: |
-        python autolysis.py goodreads.csv  # Run your Python script
+        for file in *.csv; do
+          echo "Processing $file"
+          python autolysis.py "$file"  # Run your Python script on each CSV file
+        done
 
     - name: Upload generated files as artifacts
       uses: actions/upload-artifact@v3
       with:
         name: analysis-artifacts
-        path: '*.png'
+        path: |
+          '*.png'  # Upload PNG files (charts)
+          '*.md'   # Upload README files
