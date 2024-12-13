@@ -39,9 +39,8 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: analysis-artifacts
-        path: |
-          '*.png'  # Upload PNG files (charts)
-          '*.md'   # Upload README files
+        path: "**/*.{png,md}"
+
 
     - name: Debug File Listing
       run: |
