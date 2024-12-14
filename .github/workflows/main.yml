@@ -46,3 +46,10 @@ jobs:
         name: analysis-artifacts
         path: "**/*.{png,md}"
         if-no-files-found: warn
+
+    - name: Debug File Listing
+      run: |
+        echo "Generated Files:"
+        find . -type f
+
+
