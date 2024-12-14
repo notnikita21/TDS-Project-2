@@ -23,37 +23,26 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install openai  # Install the openai library directly
-        pip install -r requirements.txt  # This will install other dependencies if you still use them
+        pip install openai
+        pip install -r requirements.txt  
 
     - name: Run autolysis script on all CSV files
       env:
-        AIPROXY_TOKEN: ${{ secrets.AIPROXY_TOKEN }}  # Access secret token securely
+        AIPROXY_TOKEN: ${{ secrets.AIPROXY_TOKEN }}
       run: |
         for file in *.csv; do
           echo "Processing $file"
-          python autolysis.py "$file"  # Run your Python script on each CSV file
+          python autolysis.py "$file"
         done
 
     - name: List generated files
       run: |
-        echo "Listing generated files:"
+        echo "Generated Files:"
         find . -type f
-
-    - name: Set file permissions
-      run: chmod -R a+r ./
 
     - name: Upload generated files as artifacts
       uses: actions/upload-artifact@v3
       with:
         name: analysis-artifacts
-        path: |
-          goodreads/*
-          media/*
-          happiness/*
-
-    - name: Debug File Listing
-      run: |
-        echo "Generated Files:"
-        find . -type f
-
+        path: "**/*.{png,md}"
+        if-no-files-found: warn
