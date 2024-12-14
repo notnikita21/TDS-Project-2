@@ -63,6 +63,8 @@ def process_csv_files():
     for csv_file in csv_files:
         output_folder = os.path.join(os.getcwd(), os.path.splitext(os.path.basename(csv_file))[0])
         os.makedirs(output_folder, exist_ok=True)
+        plt.savefig(f"{output_folder}/numerical_relationships.png")
+        print(f"Saved {output_folder}/numerical_relationships.png")
 
         try:
             data = pd.read_csv(csv_file, encoding='latin-1')
@@ -101,7 +103,7 @@ def process_csv_files():
             print(f"Analysis completed for {csv_file}. Check the generated folder '{output_folder}'.")
 
         except Exception as e:
-            print(f"Error processing {csv_file}: {e}")
+            print(f"Error processing {csv_file}: {str(e)}")
 
 if __name__ == "__main__":
     # Process all CSV files found in the current directory
