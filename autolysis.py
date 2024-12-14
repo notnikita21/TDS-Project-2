@@ -63,8 +63,6 @@ def process_csv_files():
     for csv_file in csv_files:
         output_folder = os.path.join(os.getcwd(), os.path.splitext(os.path.basename(csv_file))[0])
         os.makedirs(output_folder, exist_ok=True)
-        plt.savefig(f"{output_folder}/numerical_relationships.png")
-        print(f"Saved {output_folder}/numerical_relationships.png")
 
         try:
             data = pd.read_csv(csv_file, encoding='latin-1')
