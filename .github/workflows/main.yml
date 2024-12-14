@@ -35,12 +35,22 @@ jobs:
           python autolysis.py "$file"  # Run your Python script on each CSV file
         done
 
+    - name: List generated files
+      run: |
+        echo "Listing generated files:"
+        find . -type f
+
+    - name: Set file permissions
+      run: chmod -R a+r ./
+
     - name: Upload generated files as artifacts
       uses: actions/upload-artifact@v3
       with:
         name: analysis-artifacts
-        path: "**/*.{png,md}"
-
+        path: |
+          goodreads/*
+          media/*
+          happiness/*
 
     - name: Debug File Listing
       run: |
