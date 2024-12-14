@@ -14,20 +14,20 @@ def generate_visualizations(data, output_folder):
     # Generate pairplot for numerical relationships
     if len(numerical_columns) > 0:
         sns.pairplot(data[numerical_columns])
-        plt.savefig(f"{output_folder}/numerical_relationships.png")
+        plt.savefig(os.path.join(output_folder, 'numerical_relationships.png'))
         plt.close()
 
     # Generate bar plots for categorical columns
     for col in categorical_columns:
         data[col].value_counts().head(10).plot(kind='bar', title=f"Top Categories in {col}")
-        plt.savefig(f"{output_folder}/{col}_barplot.png")
+        plt.savefig(os.path.join(output_folder, f'{col}_barplot.png'))
         plt.close()
 
     # Generate trend plots for datetime columns
     for col in datetime_columns:
         data[col] = pd.to_datetime(data[col], errors='coerce')
         data[col].value_counts().sort_index().plot(title=f"Trends in {col}")
-        plt.savefig(f"{output_folder}/{col}_trend.png")
+        plt.savefig(os.path.join(output_folder, f'{col}_trend.png'))
         plt.close()
 
 # Function to query LLM for insights
@@ -61,7 +61,8 @@ def process_csv_files():
         return
 
     for csv_file in csv_files:
-        output_folder = os.path.join(os.getcwd(), os.path.splitext(os.path.basename(csv_file))[0])
+        dataset_name = os.path.splitext(csv_file)[0]
+        output_folder = os.path.join(os.getcwd(), dataset_name)
         os.makedirs(output_folder, exist_ok=True)
 
         try:
@@ -89,7 +90,7 @@ def process_csv_files():
                 f.write("\n\n## Insights\n\n")
                 f.write(insights)
                 f.write("\n\n## Visualizations\n\n")
-                
+
                 # Add links to the generated visualizations
                 if len(data.select_dtypes(include=['float64', 'int64']).columns) > 0:
                     f.write(f"![Numerical Relationships](numerical_relationships.png)\n")
