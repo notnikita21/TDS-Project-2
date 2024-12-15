@@ -11,24 +11,33 @@ def generate_visualizations(data, output_folder):
     categorical_columns = data.select_dtypes(include=['object', 'category']).columns
     datetime_columns = data.select_dtypes(include=['datetime64']).columns
 
+    # Set figure size limit
+    plt.rcParams['figure.figsize'] = (7, 7)
+
     # Generate pairplot for numerical relationships
     if len(numerical_columns) > 0:
         sns.pairplot(data[numerical_columns])
-        plt.savefig(os.path.join(output_folder, 'numerical_relationships.png'))
+        plt.savefig(os.path.join(output_folder, 'numerical_relationships.png'), bbox_inches='tight')
         plt.close()
 
     # Generate bar plots for categorical columns
     for col in categorical_columns:
-        data[col].value_counts().head(10).plot(kind='bar', title=f"Top Categories in {col}")
-        plt.savefig(os.path.join(output_folder, f'{col}_barplot.png'))
-        plt.close()
+        try:
+            data[col].value_counts().head(10).plot(kind='bar', title=f"Top Categories in {col}")
+            plt.savefig(os.path.join(output_folder, f'{col}_barplot.png'), bbox_inches='tight')
+            plt.close()
+        except Exception as e:
+            print(f"Error generating bar plot for {col}: {e}")
 
     # Generate trend plots for datetime columns
     for col in datetime_columns:
-        data[col] = pd.to_datetime(data[col], errors='coerce')
-        data[col].value_counts().sort_index().plot(title=f"Trends in {col}")
-        plt.savefig(os.path.join(output_folder, f'{col}_trend.png'))
-        plt.close()
+        try:
+            data[col] = pd.to_datetime(data[col], errors='coerce')
+            data[col].value_counts().sort_index().plot(title=f"Trends in {col}")
+            plt.savefig(os.path.join(output_folder, f'{col}_trend.png'), bbox_inches='tight')
+            plt.close()
+        except Exception as e:
+            print(f"Error generating trend plot for {col}: {e}")
 
 # Function to query LLM for insights
 def ask_llm(prompt):
@@ -53,7 +62,6 @@ def ask_llm(prompt):
 
 # Main function to process multiple CSV files dynamically
 def process_csv_files():
-    # Get all CSV files in the current directory
     csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
 
     if not csv_files:
@@ -71,17 +79,12 @@ def process_csv_files():
             print(f"Columns in {csv_file}: {data.columns.tolist()}")
             print(f"Data types in {csv_file}: {data.dtypes}")
 
-            # Summarize the data
             summary = data.describe(include='all')
-
-            # Generate visualizations
             generate_visualizations(data, output_folder)
 
-            # Get insights from LLM
             prompt = f"Summarize the following dataset insights:\n\n{summary.to_markdown()}"
             insights = ask_llm(prompt)
 
-            # Write README.md
             readme_path = os.path.join(output_folder, 'README.md')
             with open(readme_path, 'w') as f:
                 f.write(f"# Automated Data Analysis for {os.path.basename(csv_file)}\n\n")
@@ -91,12 +94,11 @@ def process_csv_files():
                 f.write(insights)
                 f.write("\n\n## Visualizations\n\n")
 
-                # Add links to the generated visualizations
                 if len(data.select_dtypes(include=['float64', 'int64']).columns) > 0:
                     f.write(f"![Numerical Relationships](numerical_relationships.png)\n")
-                for col in data.select_dtypes(include=['object', 'category']).columns:
+                for col in categorical_columns:
                     f.write(f"![{col} Bar Plot]({col}_barplot.png)\n")
-                for col in data.select_dtypes(include=['datetime64']).columns:
+                for col in datetime_columns:
                     f.write(f"![{col} Trends]({col}_trend.png)\n")
 
             print(f"Analysis completed for {csv_file}. Check the generated folder '{output_folder}'.")
@@ -105,5 +107,4 @@ def process_csv_files():
             print(f"Error processing {csv_file}: {str(e)}")
 
 if __name__ == "__main__":
-    # Process all CSV files found in the current directory
     process_csv_files()
