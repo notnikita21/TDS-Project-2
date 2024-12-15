@@ -1,0 +1,29 @@
+name: Evaluate Submission
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Set AIPROXY_TOKEN environment variable
+        run: echo "AIPROXY_TOKEN=${{ secrets.AIPROXY_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Install required dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run evaluation script
+        run: |
+          python -m uv run https://raw.githubusercontent.com/sanand0/tools-in-data-science-public/tds-2024-t3/project2/evaluate.py https://raw.githubusercontent.com/${{ github.repository }}/main/autolysis.py
