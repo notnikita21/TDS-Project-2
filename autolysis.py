@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import requests
 import shutil
 import uvicorn
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.cluster import KMeans
+from scipy import stats
+from sklearn.model_selection import train_test_split
 
 # Function to create a folder if it doesn't exist
 def create_folder_if_needed(folder_name):
@@ -22,13 +27,67 @@ def move_file_to_folder(file_name, folder_name):
 # Function to generate and save visualizations for each dataset
 def generate_visualizations(data, output_folder, numerical_columns, categorical_columns, datetime_columns):
     """Generate and save visualizations."""
+
     # Set figure size limit
     plt.rcParams['figure.figsize'] = (7, 7)
+
+    # Outlier and Anomaly Detection: Boxplot for numerical columns
+    for col in numerical_columns:
+        sns.boxplot(data[col])
+        plt.title(f"Outlier Detection in {col}")
+        plt.savefig(os.path.join(output_folder, f'{col}_outliers.png'), bbox_inches='tight')
+        plt.close()
+
+    # Correlation Heatmap for numerical relationships
+    if len(numerical_columns) > 0:
+        correlation_matrix = data[numerical_columns].corr()
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+        plt.title("Correlation Analysis")
+        plt.savefig(os.path.join(output_folder, 'correlation_analysis.png'), bbox_inches='tight')
+        plt.close()
 
     # Generate pairplot for numerical relationships
     if len(numerical_columns) > 0:
         sns.pairplot(data[numerical_columns])
         plt.savefig(os.path.join(output_folder, 'numerical_relationships.png'), bbox_inches='tight')
+        plt.close()
+
+    # Regression Analysis: Linear regression plot
+    if len(numerical_columns) > 1:
+        X = data[numerical_columns].dropna().iloc[:, :-1]  # Features (excluding the last column)
+        y = data[numerical_columns].dropna().iloc[:, -1]  # Target (last column)
+        regressor = LinearRegression()
+        regressor.fit(X, y)
+        y_pred = regressor.predict(X)
+
+        plt.scatter(y, y_pred)
+        plt.title("Regression Analysis: Actual vs Predicted")
+        plt.xlabel("Actual")
+        plt.ylabel("Predicted")
+        plt.savefig(os.path.join(output_folder, 'regression_analysis.png'), bbox_inches='tight')
+        plt.close()
+
+    # Feature Importance Analysis using Random Forest
+    if len(numerical_columns) > 1:
+        X = data[numerical_columns].dropna().iloc[:, :-1]
+        y = data[numerical_columns].dropna().iloc[:, -1]
+
+        rf = RandomForestRegressor()
+        rf.fit(X, y)
+        feature_importance = pd.Series(rf.feature_importances_, index=X.columns)
+
+        feature_importance.sort_values(ascending=False).plot(kind='bar', title="Feature Importance")
+        plt.savefig(os.path.join(output_folder, 'feature_importance.png'), bbox_inches='tight')
+        plt.close()
+
+    # Cluster Analysis: KMeans clustering
+    if len(numerical_columns) > 1:
+        X = data[numerical_columns].dropna()
+        kmeans = KMeans(n_clusters=4, random_state=42)
+        data['Cluster'] = kmeans.fit_predict(X)
+        sns.scatterplot(data=data, x=numerical_columns[0], y=numerical_columns[1], hue='Cluster', palette='Set2')
+        plt.title("Cluster Analysis")
+        plt.savefig(os.path.join(output_folder, 'cluster_analysis.png'), bbox_inches='tight')
         plt.close()
 
     # Generate bar plots for categorical columns
@@ -108,12 +167,17 @@ def process_csv_file(csv_file):
             f.write("\n\n## Visualizations\n\n")
 
             # Add visualizations to the README
+            f.write(f"![Correlation Analysis](correlation_analysis.png)\n")
             if len(numerical_columns) > 0:
                 f.write(f"![Numerical Relationships](numerical_relationships.png)\n")
             for col in categorical_columns:
                 f.write(f"![{col} Bar Plot]({col}_barplot.png)\n")
             for col in datetime_columns:
                 f.write(f"![{col} Trends]({col}_trend.png)\n")
+            f.write(f"![Outlier Detection]({numerical_columns[0]}_outliers.png)\n")
+            f.write(f"![Regression Analysis](regression_analysis.png)\n")
+            f.write(f"![Feature Importance](feature_importance.png)\n")
+            f.write(f"![Cluster Analysis](cluster_analysis.png)\n")
 
         # Move the generated README and visualizations to the folder
         move_file_to_folder('README.md', output_folder)
@@ -122,6 +186,10 @@ def process_csv_file(csv_file):
         for col in datetime_columns:
             move_file_to_folder(f'{col}_trend.png', output_folder)
         move_file_to_folder('numerical_relationships.png', output_folder)
+        move_file_to_folder('correlation_analysis.png', output_folder)
+        move_file_to_folder('regression_analysis.png', output_folder)
+        move_file_to_folder('feature_importance.png', output_folder)
+        move_file_to_folder('cluster_analysis.png', output_folder)
 
         # Also move the CSV file into the folder
         move_file_to_folder(csv_file, output_folder)
