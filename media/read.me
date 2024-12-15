@@ -1,0 +1,55 @@
+# Automated Data Analysis for media.csv
+
+## Summary Statistics
+
+|        | date      | language   | type   | title             | by                |    overall |     quality |   repeatability |
+|:-------|:----------|:-----------|:-------|:------------------|:------------------|-----------:|------------:|----------------:|
+| count  | 2553      | 2652       | 2652   | 2652              | 2390              | 2652       | 2652        |     2652        |
+| unique | 2055      | 11         | 8      | 2312              | 1528              |  nan       |  nan        |      nan        |
+| top    | 21-May-06 | English    | movie  | Kanda Naal Mudhal | Kiefer Sutherland |  nan       |  nan        |      nan        |
+| freq   | 8         | 1306       | 2211   | 9                 | 48                |  nan       |  nan        |      nan        |
+| mean   | nan       | nan        | nan    | nan               | nan               |    3.04751 |    3.20928  |        1.49472  |
+| std    | nan       | nan        | nan    | nan               | nan               |    0.76218 |    0.796743 |        0.598289 |
+| min    | nan       | nan        | nan    | nan               | nan               |    1       |    1        |        1        |
+| 25%    | nan       | nan        | nan    | nan               | nan               |    3       |    3        |        1        |
+| 50%    | nan       | nan        | nan    | nan               | nan               |    3       |    3        |        1        |
+| 75%    | nan       | nan        | nan    | nan               | nan               |    3       |    4        |        2        |
+| max    | nan       | nan        | nan    | nan               | nan               |    5       |    5        |        3        |
+
+## Insights
+
+The dataset presents insights from a collection of 2,553 entries related to various attributes, including date, language, type, title, creator, and ratings.
+
+### Key Insights:
+
+1. **Entry Counts**:
+   - Total records: 2,553
+   - Total unique entries in the dataset: 2,055
+   - Language variety: 11 distinct languages represented.
+   - Types of entries: 8 different types.
+
+2. **Top Entries**:
+   - The most frequently occurring date in the dataset is 21-May-06 with 8 occurrences.
+   - The most common language is English, which appears 1,306 times.
+   - The most represented type is 'movie', with 2,211 occurrences.
+   - The title "Kanda Naal Mudhal" is highlighted among the entries.
+
+3. **Ratings Overview**:
+   - Overall ratings range from a minimum of 1 to a maximum of 5, with a mean rating of approximately 3.05.
+   - Quality ratings have a similar distribution, with a mean of around 3.21.
+   - Repeatability scores show a mean of approximately 1.49, indicating that many entries may be unique or less frequently repeated.
+
+4. **Statistical Summary**:
+   - The dataset exhibits a standard deviation in overall ratings (0.76) and quality ratings (0.80), indicating some variability in the ratings provided.
+   - For quality, 25% of the entries have ratings below 3, while the median (50th percentile) yields a quality rating of 3. The upper quartile (75%) reveals quality ratings reaching up to 4.
+
+Overall, the dataset suggests a diverse set of unique entries with a predominance of English content, mainly categorized as movies, and provides insight into the average perceptions of quality and overall ratings among those entries.
+
+## Visualizations
+
+![Numerical Relationships](numerical_relationships.png)
+![date Bar Plot](date_barplot.png)
+![language Bar Plot](language_barplot.png)
+![type Bar Plot](type_barplot.png)
+![title Bar Plot](title_barplot.png)
+![by Bar Plot](by_barplot.png)
