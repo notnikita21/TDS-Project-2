@@ -51,4 +51,10 @@ jobs:
         echo "Generated Files:"
         find . -type f
 
+    - name: Check Directory Structure
+      run: |
+        echo "Current Directory Structure:"
+        find . -type d
+
+
 
