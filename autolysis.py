@@ -79,8 +79,15 @@ def process_csv_files():
             print(f"Columns in {csv_file}: {data.columns.tolist()}")
             print(f"Data types in {csv_file}: {data.dtypes}")
 
+            # Define the columns inside the main function
+            numerical_columns = data.select_dtypes(include=['float64', 'int64']).columns
+            categorical_columns = data.select_dtypes(include=['object', 'category']).columns
+            datetime_columns = data.select_dtypes(include=['datetime64']).columns
+
             summary = data.describe(include='all')
-            generate_visualizations(data, output_folder)
+
+            # Pass the columns as arguments
+            generate_visualizations(data, output_folder, numerical_columns, categorical_columns, datetime_columns)
 
             prompt = f"Summarize the following dataset insights:\n\n{summary.to_markdown()}"
             insights = ask_llm(prompt)
@@ -94,7 +101,7 @@ def process_csv_files():
                 f.write(insights)
                 f.write("\n\n## Visualizations\n\n")
 
-                if len(data.select_dtypes(include=['float64', 'int64']).columns) > 0:
+                if len(numerical_columns) > 0:
                     f.write(f"![Numerical Relationships](numerical_relationships.png)\n")
                 for col in categorical_columns:
                     f.write(f"![{col} Bar Plot]({col}_barplot.png)\n")
