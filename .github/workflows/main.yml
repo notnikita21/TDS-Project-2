@@ -44,7 +44,9 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: generated-files
-        path: './*/{README.md,*.png}'
+        path: ./*/*/{README.md,*.png}
+        if-no-files-found: warn
+        include-hidden-files: false
 
     - name: Debug File Listing
       run: |
