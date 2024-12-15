@@ -2,15 +2,24 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
-import sys
+import shutil
 import requests
 
-# Function to generate and save visualizations for each dataset
-def generate_visualizations(data, output_folder):
-    numerical_columns = data.select_dtypes(include=['float64', 'int64']).columns
-    categorical_columns = data.select_dtypes(include=['object', 'category']).columns
-    datetime_columns = data.select_dtypes(include=['datetime64']).columns
+# Function to create a folder if it doesn't exist
+def create_folder_if_needed(folder_name):
+    """Create a folder if it does not exist."""
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
 
+# Function to move files into their respective folders
+def move_file_to_folder(file_name, folder_name):
+    """Move a file to the specified folder."""
+    create_folder_if_needed(folder_name)
+    new_path = os.path.join(folder_name, os.path.basename(file_name))
+    shutil.move(file_name, new_path)
+
+# Function to generate and save visualizations for each dataset
+def generate_visualizations(data, output_folder, numerical_columns, categorical_columns, datetime_columns):
     # Set figure size limit
     plt.rcParams['figure.figsize'] = (7, 7)
 
@@ -71,7 +80,7 @@ def process_csv_files():
     for csv_file in csv_files:
         dataset_name = os.path.splitext(csv_file)[0]
         output_folder = os.path.join(os.getcwd(), dataset_name)
-        os.makedirs(output_folder, exist_ok=True)
+        create_folder_if_needed(output_folder)  # Ensure folder exists
 
         try:
             data = pd.read_csv(csv_file, encoding='latin-1')
@@ -107,6 +116,17 @@ def process_csv_files():
                     f.write(f"![{col} Bar Plot]({col}_barplot.png)\n")
                 for col in datetime_columns:
                     f.write(f"![{col} Trends]({col}_trend.png)\n")
+
+            # Move the generated README and visualization PNGs into the correct folder
+            move_file_to_folder('README.md', output_folder)
+            for col in categorical_columns:
+                move_file_to_folder(f'{col}_barplot.png', output_folder)
+            for col in datetime_columns:
+                move_file_to_folder(f'{col}_trend.png', output_folder)
+            move_file_to_folder('numerical_relationships.png', output_folder)
+
+            # Also move the CSV file into the folder
+            move_file_to_folder(csv_file, output_folder)
 
             print(f"Analysis completed for {csv_file}. Check the generated folder '{output_folder}'.")
 
