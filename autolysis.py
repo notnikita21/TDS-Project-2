@@ -1,11 +1,12 @@
 import os
+import shutil
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import shutil
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.cluster import KMeans
+import requests
 
 # Function to create a folder if it doesn't exist
 def create_folder_if_needed(folder_name):
@@ -86,9 +87,51 @@ def generate_visualizations(data, output_folder, numerical_columns, categorical_
         except Exception as e:
             print(f"Error generating trend plot for {col}: {e}")
 
+# Function to ask LLM for story generation
+def ask_llm_for_story(summary, visualizations):
+    url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {os.environ['AIPROXY_TOKEN']}"  # Ensure AIPROXY_TOKEN is set in environment variables
+    }
+    prompt = (
+        f"Write a narrative story about a data analysis project.\n"
+        f"Data Summary:\n{summary}\n"
+        f"Visualizations:\n{visualizations}\n"
+        f"Describe the data received, analysis carried out, insights discovered, and implications."
+    )
+    data = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "You are a data storytelling assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+    
+    try:
+        # Make the request to the API
+        response = requests.post(url, json=data, headers=headers)
+
+        # Check for successful response
+        response.raise_for_status()  # Raises an error for non-2xx responses
+        response_data = response.json()
+
+        # Extract the story from the response
+        story = response_data['choices'][0]['message']['content'].strip()
+        return story
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error communicating with the LLM API: {e}")
+        return None
+
 # Function to generate README using LLM
 def generate_readme(data, output_folder, analysis_summary):
-    readme_content = f"""# Automated Data Analysis Report
+    visualizations = [f"{file}" for file in os.listdir(output_folder) if file.endswith('.png')]
+    # Ask LLM for story
+    story = ask_llm_for_story(analysis_summary, "\n".join(visualizations))
+    
+    if story:
+        readme_content = f"""# Automated Data Analysis Report
 
 ## Dataset Summary
 
@@ -112,13 +155,13 @@ We conducted extensive analysis, including:
 ## Visualizations
 
 """
-    for file in os.listdir(output_folder):
-        if file.endswith('.png'):
+        for file in visualizations:
             readme_content += f"![{file.split('.')[0].replace('_', ' ').title()}]({file})\n"
 
-    readme_path = os.path.join(output_folder, 'README.md')
-    with open(readme_path, 'w') as f:
-        f.write(readme_content)
+        # Write the story and visualizations to README.md
+        readme_path = os.path.join(output_folder, 'README.md')
+        with open(readme_path, 'w') as f:
+            f.write(story)
 
 # Main function to process a CSV file
 def process_csv_file(csv_file):
