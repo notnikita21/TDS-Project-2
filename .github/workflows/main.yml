@@ -40,12 +40,11 @@ jobs:
         echo "Generated Files:"
         find . -type f
 
-    - name: Upload generated files as artifacts
+    - name: Upload generated files
       uses: actions/upload-artifact@v3
       with:
-        name: analysis-artifacts
-        path: "**/*.{png,md}"
-        if-no-files-found: warn
+        name: generated-files
+        path: './*/{README.md,*.png}'
 
     - name: Debug File Listing
       run: |
