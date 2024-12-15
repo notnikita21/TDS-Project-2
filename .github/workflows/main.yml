@@ -23,8 +23,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install openai
-        pip install -r requirements.txt  
+        pip install -r requirements.txt
 
     - name: Run autolysis script on all CSV files
       env:
@@ -41,7 +40,7 @@ jobs:
         find . -type f
 
     - name: Upload generated files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: generated-files
         path: |
@@ -49,13 +48,3 @@ jobs:
           **/*.png
         if-no-files-found: warn
         include-hidden-files: false
-
-    - name: Debug File Listing
-      run: |
-        echo "Generated Files:"
-        find . -type f
-
-    - name: Check Directory Structure
-      run: |
-        echo "Current Directory Structure:"
-        find . -type d
